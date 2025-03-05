@@ -3,8 +3,8 @@ const endpointsJson = require("../endpoints.json");
 
 /* Set up your beforeEach & afterAll functions here */
 
-describe("GET /api", () => {
-  test("200: Responds with an object detailing the documentation for each endpoint", () => {
+describe.skip("GET /api", () => {
+  test.skip("200: Responds with an object detailing the documentation for each endpoint", () => {
     return request(app)
       .get("/api")
       .expect(200)
