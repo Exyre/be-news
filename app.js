@@ -3,6 +3,7 @@ const app = express();
 
 const { getApiEndpoints } = require("./Controllers/apiController");
 const { getAllTopics } = require("./Controllers/topics.controller");
+const { getArticlesById } = require("./Controllers/articles.controller")
 
 app.use(express.json());
 
@@ -10,9 +11,13 @@ app.get("/api", getApiEndpoints);
 
 app.get("/api/topics", getAllTopics);
 
+app.get("/api/articles/:article_id", getArticlesById)
+
 app.use((err, req, res, next) => {
     if(err.status) {
         res.status(err.status).send({ msg: err.msg })
+    } else if (err.code === "22P02") {
+        res.status(400).send({ msg: "Invalid article_id" })
     } else {
         console.log(err);
         res.status(500).send({ msg: "Internal Server Error" })
