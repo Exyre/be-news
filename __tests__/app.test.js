@@ -4,10 +4,11 @@ const app = require("../app");
 const db = require("../db/connection");
 const seed = require("../db/seeds/seed");
 const testData = require("../db/data/test-data");
+require('jest-sorted');
 
-beforeEach(() => seed(testData));
-afterAll(() => db.end());
-
+beforeEach(() =>{ 
+  return seed(testData)
+});
 
 describe("GET /api", () => {
   test("200: Responds with an object detailing the documentation for each endpoint", () => {
@@ -85,3 +86,41 @@ describe("GET /api/articles/:article_id", () => {
       });
   });
 })
+
+describe("/api/articles", () => {
+    test("200: Responds with an array of all articles with comment counts, sorted by date descending", () => {
+        return request(app)
+            .get("/api/articles")
+            .expect(200)
+            .then(({ body }) => {
+                const { articles } = body;
+                expect(articles).toBeInstanceOf(Array);
+                expect(articles.length).toBeGreaterThan(0);
+
+                articles.forEach((article) => {
+                    expect(article).toHaveProperty("article_id");
+                    expect(article).toHaveProperty("author");
+                    expect(article).toHaveProperty("title");
+                    expect(article).toHaveProperty("topic");
+                    expect(article).toHaveProperty("created_at");
+                    expect(article).toHaveProperty("votes");
+                    expect(article).toHaveProperty("article_img_url");
+                    expect(article).toHaveProperty("comment_count");
+                });
+
+                expect(articles).toBeSortedBy("created_at", { descending: true });
+            });
+    });
+    test("400: Responds with an error message when sort_by query is invalid", () => {
+      return request(app)
+        .get("/api/articles?sort_by=invalid_column") 
+        .expect(400)
+        .then(({ body }) => {
+          expect(body).toEqual({ msg: "Invalid sort_by query" });
+        });
+    });
+});
+
+afterAll(() => {
+  return db.end(); 
+});
