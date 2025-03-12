@@ -119,7 +119,17 @@ describe("/api/articles", () => {
 
             expect(articles).toBeSortedBy("created_at", { descending: true });
         });
-});
+    });
+    test("200: responds with articles sorted by the specified column", () => {
+        return request(app)
+            .get("/api/articles?sort_by=title")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                expect(body.articles).toBeSortedBy("title", { descending: true });
+            });
+    });
+
     test("400: Responds with an error message when sort_by query is invalid", () => {
       return request(app)
         .get("/api/articles?sort_by=invalid_column") 
@@ -127,6 +137,32 @@ describe("/api/articles", () => {
         .then(({ body }) => {
           expect(body).toEqual({ msg: "Invalid sort_by query" });
         });
+    });
+    test("400: responds with 'Invalid order query' when given an invalid order", () => {
+        return request(app)
+            .get("/api/articles?order=sideways")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid order query");
+            });
+    });
+    test("200: defaults to sorting by created_at in descending order", () => {
+        return request(app)
+            .get("/api/articles")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                expect(body.articles).toBeSortedBy("created_at", { descending: true });
+            });
+    });
+    test("200: responds with articles sorted in ascending order when specified", () => {
+        return request(app)
+            .get("/api/articles?sort_by=votes&order=asc")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                expect(body.articles).toBeSortedBy("votes", { descending: false });
+            });
     });
 });
 
