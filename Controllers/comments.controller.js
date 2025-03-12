@@ -43,4 +43,4 @@ function removeCommentById(req, res, next) {
         .catch(next)
 }
 
-module.exports = { getCommentsByArticleId, postCommentByArticleId, removeCommentById};
+module.exports = { getCommentsByArticleId, postCommentByArticleId, removeCommentById };
