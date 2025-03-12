@@ -5,8 +5,7 @@ const { getApiEndpoints } = require("./Controllers/apiController");
 const { getAllTopics } = require("./Controllers/topics.controller");
 const { getArticlesById } = require("./Controllers/articles.controller");
 const { getAllArticles } = require("./Controllers/articles.controller");
-const { getCommentsByArticleId } = require("./Controllers/comments.controller");
-const { postCommentByArticleId } = require("./Controllers/comments.controller");
+const { getCommentsByArticleId, postCommentByArticleId, removeCommentById } = require("./Controllers/comments.controller");
 const { patchArticleVotes } = require("./Controllers/articles.controller");
 
 app.use(express.json());
@@ -25,16 +24,23 @@ app.post("/api/articles/:article_id/comments", postCommentByArticleId);
 
 app.patch("/api/articles/:article_id", patchArticleVotes);
 
+app.delete("/api/comments/:comment_id", removeCommentById);
+
 app.use((err, req, res, next) => {
-    if(err.status) {
+    if (err.status) {
         res.status(err.status).send({ msg: err.msg });
     } else if (err.code === "22P02") {
-        res.status(400).send({ msg: "Invalid article_id" });
+        if (req.path.includes("/comments/")) {
+            res.status(400).send({ msg: "Invalid comment ID" });
+        } else {
+            res.status(400).send({ msg: "Invalid article_id" });
+        }
     } else {
         console.log(err);
         res.status(500).send({ msg: "Internal Server Error" });
     }
-})
+});
+
 
 app.all("*", (req, res) => {
   res.status(404).send({ msg: "Route not found" });

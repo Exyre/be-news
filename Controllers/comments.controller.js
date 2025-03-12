@@ -1,4 +1,4 @@
-const { fetchCommentsByArticleId, insertCommentByArticleId } = require("../Models/comments.model")
+const { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById} = require("../Models/comments.model")
 
 function getCommentsByArticleId(req, res, next) {
     const { article_id } = req.params;
@@ -33,4 +33,14 @@ function postCommentByArticleId(req, res, next) {
         })
 }
 
-module.exports = { getCommentsByArticleId, postCommentByArticleId};
+function removeCommentById(req, res, next) {
+    const { comment_id } = req.params
+
+    deleteCommentById(comment_id)
+        .then(() => {
+            res.status(204).send();
+        })
+        .catch(next)
+}
+
+module.exports = { getCommentsByArticleId, postCommentByArticleId, removeCommentById};
