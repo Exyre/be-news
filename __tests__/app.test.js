@@ -289,3 +289,32 @@ describe("GET /api/articles/:article_id/comments", () => {
             });
     });
 });
+
+describe("DELETE /api/comments/:comment_id", () => {
+    test("204: Successfully deletes a comment", () => {
+        return request(app)
+            .delete("/api/comments/1")
+            .expect(204)
+            .then(({ body }) => {
+                expect(body).toEqual({});
+            });
+    });
+
+    test("404: Responds with 'Comment not found' when comment_id does not exist", () => {
+        return request(app)
+            .delete("/api/comments/9999")
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Comment not found");
+            });
+    });
+
+    test("400: Responds with 'Invalid comment ID' when comment_id is not a number", () => {
+        return request(app)
+            .delete("/api/comments/notAnId")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid comment ID");
+            });
+    });
+});
