@@ -177,3 +177,68 @@ describe("GET /api/articles/:article_id/comments", () => {
             });
     });
   })
+
+  describe("POST /api/articles/:article_id/comments", () => {
+    test("201: Responds with the newly added comment", () => {
+        const newComment = {
+            username: "butter_bridge",
+            body: "This is a test comment"
+        };
+
+        return request(app)
+            .post("/api/articles/1/comments")
+            .send(newComment)
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.comment).toEqual(
+                    expect.objectContaining({
+                        comment_id: expect.any(Number),
+                        body: "This is a test comment",
+                        article_id: 1,
+                        author: "butter_bridge",
+                        votes: 0,
+                        created_at: expect.any(String),
+                    })
+                );
+            });
+    });
+    test("400: Responds with error if missing required fields", () => {
+        const incompleteComment = { username: "butter_bridge" };
+
+        return request(app)
+            .post("/api/articles/1/comments")
+            .send(incompleteComment)
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Bad request - missing required fields");
+            });
+    });
+    test("404: Responds with error if article_id does not exist", () => {
+        const newComment = {
+            username: "butter_bridge",
+            body: "This article does not exist"
+        };
+
+        return request(app)
+            .post("/api/articles/9999/comments")
+            .send(newComment)
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Article not found or user does not exist");
+            });
+    });
+    test("400: Responds with error if article_id is invalid", () => {
+        const newComment = {
+            username: "butter_bridge",
+            body: "Invalid ID test"
+        };
+
+        return request(app)
+            .post("/api/articles/not-a-number/comments")
+            .send(newComment)
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid article ID");
+            });
+    });
+  })

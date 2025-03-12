@@ -6,6 +6,7 @@ const { getAllTopics } = require("./Controllers/topics.controller");
 const { getArticlesById } = require("./Controllers/articles.controller")
 const { getAllArticles } = require("./Controllers/articles.controller");
 const { getCommentsByArticleId } = require("./Controllers/comments.controller");
+const { postCommentByArticleId } = require("./Controllers/comments.controller")
 
 app.use(express.json());
 
@@ -18,6 +19,8 @@ app.get("/api/articles/:article_id", getArticlesById)
 app.get("/api/articles", getAllArticles)
 
 app.get("/api/articles/:article_id/comments", getCommentsByArticleId)
+
+app.post("/api/articles/:article_id/comments", postCommentByArticleId)
 
 app.use((err, req, res, next) => {
     if(err.status) {
