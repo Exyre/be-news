@@ -510,3 +510,77 @@ describe("GET /api/users/:username", () => {
             });
     });
 });
+
+describe("PATCH /api/comments/:comment_id", () => {
+    test("200: should update the votes of a comment and return the updated comment", () => {
+        const updatedVotes = { inc_votes: 1 }; 
+        return request(app)
+            .patch("/api/comments/1") 
+            .send(updatedVotes)
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comment).toEqual(
+                    expect.objectContaining({
+                        comment_id: expect.any(Number),
+                        votes: expect.any(Number),
+                    })
+                );
+                expect(body.comment.votes).toBeGreaterThan(0); 
+            });
+    });
+    test("400: Responds with 'inc_votes is required and must be a number' when inc_votes is missing", () => {
+        return request(app)
+            .patch("/api/comments/1") 
+            .send({})
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('inc_votes is required and must be a number');
+            });
+    });
+    test("400: Responds with 'inc_votes is required and must be a number' when inc_votes is not a number", () => {
+        return request(app)
+            .patch("/api/comments/1") 
+            .send({ inc_votes: "string" })
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('inc_votes is required and must be a number');
+            });
+    });
+    test("400: Responds with 'Invalid comment ID' when comment_id is not a valid number", () => {
+        return request(app)
+            .patch("/api/comments/invalid_id")
+            .send({ inc_votes: 1 })
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid comment ID");
+            });
+    });
+    test("404: Responds with 'Comment not found' when the comment_id does not exist", () => {
+        return request(app)
+            .patch("/api/comments/9999999") 
+            .send({ inc_votes: 1 })
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Comment not found");
+            });
+    });
+    test("200: should not change the votes when inc_votes is 0", () => {
+        return request(app)
+            .patch("/api/comments/1") 
+            .send({ inc_votes: 0 }) 
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comment.votes).toBe(16); 
+            });
+    });
+
+    test("200: should decrement the votes when inc_votes is negative", () => {
+        return request(app)
+            .patch("/api/comments/1")
+            .send({ inc_votes: -1 }) 
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comment.votes).toBe(15)
+            });
+    });
+});

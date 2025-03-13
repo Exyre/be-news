@@ -36,4 +36,28 @@ function deleteCommentById(comment_id) {
     }) 
 }
 
-module.exports = { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById }
+function updateVotesOnComment(comment_id, inc_votes) {
+    if (!comment_id || isNaN(comment_id)) {
+        return Promise.reject({ status: 400, msg: "Invalid comment ID" })
+    } 
+
+    if (inc_votes === undefined || isNaN(inc_votes)) {
+        return Promise.reject({ status: 400, msg: "inc_votes is required and must be a number" });
+    }
+
+    return db.query(
+       `UPDATE comments
+        SET votes = votes + $1
+        WHERE comment_id = $2
+        RETURNING comment_id, votes`,
+        [inc_votes, comment_id]
+    )
+    .then(({ rows }) => {
+            if (rows.length === 0) {
+                return Promise.reject({ status: 404, msg: "Comment not found" });
+            }
+            return rows[0]; 
+        });
+}
+
+module.exports = { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById, updateVotesOnComment }
