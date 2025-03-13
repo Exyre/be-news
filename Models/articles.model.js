@@ -21,13 +21,13 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
     const validOrder = ["asc", "desc"];
 
     if (!validSortBy.includes(sort_by)) {
-        return Promise.reject({ status: 400, msg: "Invalid sort_by query"});
+        return Promise.reject({ status: 400, msg: "Invalid sort_by query" });
     }
     if (!validOrder.includes(order)) {
         return Promise.reject({ status: 400, msg: "Invalid order query" });
     }
 
-     let queryStr = `
+    let queryStr = `
         SELECT articles.*, COUNT(comments.article_id) AS comment_count
         FROM articles
         LEFT JOIN comments ON comments.article_id = articles.article_id
@@ -35,8 +35,25 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
     let queryParams = [];
 
     if (topic) {
-        queryStr += ` WHERE topic = $1`;
-        queryParams.push(topic);
+        return db.query(`SELECT * FROM topics WHERE slug = $1`, [topic])
+            .then(({ rows }) => {
+                if (rows.length === 0) {
+                    return Promise.reject({ status: 404, msg: "Topic not found" });
+                }
+
+                queryStr += ` WHERE topic = $1`;
+                queryParams.push(topic);
+
+                queryStr += ` 
+                    GROUP BY articles.article_id
+                    ORDER BY ${sort_by} ${order};
+                `;
+
+                return db.query(queryStr, queryParams);
+            })
+            .then(({ rows }) => {
+                return rows.length === 0 ? [] : rows; 
+            });
     }
 
     queryStr += ` 
@@ -44,14 +61,10 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
         ORDER BY ${sort_by} ${order};
     `;
 
-   return db.query(queryStr, queryParams)
-        .then(({ rows }) => {
-            if (rows.length === 0 && topic) {
-                return Promise.reject({ status: 404, msg: "Topic not found" });
-            }
-            return rows;
-        });
+    return db.query(queryStr, queryParams).then(({ rows }) => rows);
 }
+
+
 
 function updateArticleVotes(article_id, inc_votes) {
     return db.query(

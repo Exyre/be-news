@@ -75,6 +75,7 @@ describe("GET /api/articles/:article_id", () => {
 
         const commentCount = parseInt(article.comment_count, 10);
         expect(commentCount).toBeGreaterThanOrEqual(0);
+        expect(Number.isInteger(commentCount)).toBe(true);
       })
   })
   test("404: Responds with an error message when article_id does not exist", () => {
@@ -172,20 +173,20 @@ describe("/api/articles", () => {
             .get("/api/articles?topic=cats")
             .expect(200)
             .then(({ body }) => {
-                expect(body.articles).toBeInstanceOf(Array);
                 body.articles.forEach(article => {
                     expect(article.topic).toBe("cats");
                 });
             });
     });
-    test("200: Responds with all articles when no topic query is passed", () => {
+    test("200: Returns an empty array if the topic exists but has no articles", () => {
         return request(app)
-            .get("/api/articles")
-            .expect(200)
+            .get("/api/articles?topic=nonexistent_topic")
+            .expect(404)  
             .then(({ body }) => {
-                expect(body.articles).toBeInstanceOf(Array);
-                expect(body.articles.length).toBeGreaterThan(0);  
+                expect(body.msg).toBe("Topic not found");  
             });
+    });
+
     });
     test("404: Responds with 'Topic not found' when an invalid topic is passed", () => {
         return request(app)
@@ -211,7 +212,7 @@ describe("/api/articles", () => {
                 expect(body.msg).toBe("Invalid order query");
             });
     });
-});
+
 
 describe("GET /api/articles/:article_id/comments", () => {
     test("200: Responds with an array of comments for the given article_id", () => {

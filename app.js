@@ -1,34 +1,21 @@
 const express = require("express");
 const app = express();
 
-const { getApiEndpoints } = require("./Controllers/apiController");
-const { getAllTopics } = require("./Controllers/topics.controller");
-const { getArticlesById } = require("./Controllers/articles.controller");
-const { getAllArticles } = require("./Controllers/articles.controller");
-const { getCommentsByArticleId, postCommentByArticleId, removeCommentById } = require("./Controllers/comments.controller");
-const { patchArticleVotes } = require("./Controllers/articles.controller");
-const { getAllUsers } = require("./Controllers/users.controller");
+const apiRouter = require("./routes/api-router");
+const topicsRouter = require("./routes/topics-router");
+const articlesRouter = require("./routes/articles-router");
+const commentsRouter = require("./routes/comments-router");
+const usersRouter = require("./routes/users-router");
+
 const { handleCustomErrors, handleServerErrors } = require("./errors/index")
 
 app.use(express.json());
 
-app.get("/api", getApiEndpoints);
-
-app.get("/api/topics", getAllTopics);
-
-app.get("/api/articles/:article_id", getArticlesById);
-
-app.get("/api/articles", getAllArticles);
-
-app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
-
-app.post("/api/articles/:article_id/comments", postCommentByArticleId);
-
-app.patch("/api/articles/:article_id", patchArticleVotes);
-
-app.delete("/api/comments/:comment_id", removeCommentById);
-
-app.get("/api/users", getAllUsers);
+app.use("/api", apiRouter);          
+app.use("/api/topics", topicsRouter);  
+app.use("/api/articles", articlesRouter);  
+app.use("/api/comments", commentsRouter);  
+app.use("/api/users", usersRouter);  
 
 app.use(handleCustomErrors);
 
