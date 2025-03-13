@@ -465,3 +465,48 @@ describe("GET /api/users", () => {
             });
     });
 });
+
+describe("GET /api/users/:username", () => {
+    test("GET /api/users/:username responds with a user object when a valid username is provided", () => {
+        return request(app)
+            .get("/api/users/butter_bridge")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.user).toEqual(
+                    expect.objectContaining({
+                        username: expect.any(String),
+                        name: expect.any(String),
+                        avatar_url: expect.any(String),
+                    })
+                );
+                expect(body.user.username).toBe("butter_bridge");
+            });
+    });
+
+    test("404: Responds with 'User not found' when an invalid username is provided", () => {
+        return request(app)
+            .get("/api/users/nonexistentuser")
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("User not found");
+            });
+    });
+    
+    test("400: Responds with 'Username contains invalid characters' when a username with special characters is provided", () => {
+        return request(app)
+            .get("/api/users/!@2#") 
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Username contains invalid characters");
+            });
+    });
+
+    test("404: Responds with 'Route not found' for an incorrect URL", () => {
+        return request(app)
+            .get("/api/userrs") 
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Route not found");
+            });
+    });
+});
