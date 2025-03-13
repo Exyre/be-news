@@ -145,5 +145,21 @@
         }
       ]
     }
+  },
+  "GET /api/users/:username": {
+    "description": "serves a user object by username",
+    "params": {
+      "username": {
+        "type": "string",
+        "description": "The username of the user to fetch"
+      }
+    },
+    "exampleResponse": {
+      "user": {
+        "username": "weegembump",
+        "name": "John Doe",
+        "avatar_url": "http://example.com/avatar.jpg"
+      }
+    }
   }
 }
