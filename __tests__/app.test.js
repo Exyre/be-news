@@ -72,6 +72,9 @@ describe("GET /api/articles/:article_id", () => {
         expect(article).toHaveProperty("votes");
         expect(article).toHaveProperty("article_img_url");
         expect(article.article_id).toBe(1);
+
+        const commentCount = parseInt(article.comment_count, 10);
+        expect(commentCount).toBeGreaterThanOrEqual(0);
       })
   })
   test("404: Responds with an error message when article_id does not exist", () => {
