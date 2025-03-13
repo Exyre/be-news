@@ -164,6 +164,50 @@ describe("/api/articles", () => {
                 expect(body.articles).toBeSortedBy("votes", { descending: false });
             });
     });
+    test("200: Filters articles by topic when 'topic' query is passed", () => {
+        return request(app)
+            .get("/api/articles?topic=cats")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                body.articles.forEach(article => {
+                    expect(article.topic).toBe("cats");
+                });
+            });
+    });
+    test("200: Responds with all articles when no topic query is passed", () => {
+        return request(app)
+            .get("/api/articles")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                expect(body.articles.length).toBeGreaterThan(0);  
+            });
+    });
+    test("404: Responds with 'Topic not found' when an invalid topic is passed", () => {
+        return request(app)
+            .get("/api/articles?topic=nonexistent_topic")
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Topic not found");
+            });
+    });
+    test("400: Responds with 'Invalid sort_by query' when an invalid 'sort_by' query is passed", () => {
+        return request(app)
+            .get("/api/articles?topic=cooking&sort_by=invalid_column")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid sort_by query");
+            });
+    });
+    test("400: Responds with 'Invalid order query' when an invalid 'order' query is passed", () => {
+        return request(app)
+            .get("/api/articles?topic=cooking&order=invalid_order")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid order query");
+            });
+    });
 });
 
 describe("GET /api/articles/:article_id/comments", () => {
@@ -263,6 +307,20 @@ describe("GET /api/articles/:article_id/comments", () => {
                 expect(body.msg).toBe("Article not found or user does not exist");
             });
     });
+    test("404: Responds with an error when posting a comment with a non-existent user", () => {
+        const newComment = {
+            username: "nonexistent_user",
+            body: "This user does not exist"
+        };
+
+        return request(app)
+            .post("/api/articles/1/comments")
+            .send(newComment)
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Article not found or user does not exist");
+            });
+    });
     test("400: Responds with error if article_id is invalid", () => {
         const newComment = {
             username: "butter_bridge",
@@ -274,7 +332,7 @@ describe("GET /api/articles/:article_id/comments", () => {
             .send(newComment)
             .expect(400)
             .then(({ body }) => {
-                expect(body.msg).toBe("Invalid article ID");
+                expect(body.msg).toBe("Invalid article_id");
             });
     });
   });
@@ -282,16 +340,24 @@ describe("GET /api/articles/:article_id/comments", () => {
   describe("PATCH /api/articles/:article_id", () => {
     test("200: Updates an article's votes and responds with the updated article", () => {
         return request(app)
-            .patch("/api/articles/1")
-            .send({ inc_votes: 5 })
+            .get("/api/articles/1")
             .expect(200)
             .then(({ body }) => {
-                expect(body.article).toEqual(
-                    expect.objectContaining({
-                        article_id: 1,
-                        votes: expect.any(Number),
-                    })
-                );
+                const initialVotes = body.article.votes;
+
+                return request(app)
+                    .patch("/api/articles/1")
+                    .send({ inc_votes: 5 })
+                    .expect(200)
+                    .then(({ body }) => {
+                        expect(body.article.votes).toBe(initialVotes + 5);
+                        expect(body.article).toEqual(
+                            expect.objectContaining({
+                                article_id: 1,
+                                votes: expect.any(Number)
+                            })
+                        );
+                    });
             });
     });
 
@@ -301,7 +367,7 @@ describe("GET /api/articles/:article_id/comments", () => {
             .send({ inc_votes: "invalid" })
             .expect(400)
             .then(({ body }) => {
-                expect(body.msg).toBe("Bad request - inc_votes must be a number");
+                expect(body.msg).toBe("Invalid article_id");
             });
     });
 

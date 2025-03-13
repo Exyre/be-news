@@ -8,6 +8,7 @@ const { getAllArticles } = require("./Controllers/articles.controller");
 const { getCommentsByArticleId, postCommentByArticleId, removeCommentById } = require("./Controllers/comments.controller");
 const { patchArticleVotes } = require("./Controllers/articles.controller");
 const { getAllUsers } = require("./Controllers/users.controller");
+const { handleCustomErrors, handleServerErrors } = require("./errors/index")
 
 app.use(express.json());
 
@@ -29,21 +30,9 @@ app.delete("/api/comments/:comment_id", removeCommentById);
 
 app.get("/api/users", getAllUsers);
 
-app.use((err, req, res, next) => {
-    if (err.status) {
-        res.status(err.status).send({ msg: err.msg });
-    } else if (err.code === "22P02") {
-        if (req.path.includes("/comments/")) {
-            res.status(400).send({ msg: "Invalid comment ID" });
-        } else {
-            res.status(400).send({ msg: "Invalid article_id" });
-        }
-    } else {
-        console.log(err);
-        res.status(500).send({ msg: "Internal Server Error" });
-    }
-});
+app.use(handleCustomErrors);
 
+app.use(handleServerErrors);
 
 app.all("*", (req, res) => {
   res.status(404).send({ msg: "Route not found" });
