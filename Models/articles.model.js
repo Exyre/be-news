@@ -10,7 +10,7 @@ function fetchArticleById(article_id) {
         });
 };
 
-function fetchAllArticles(sort_by = "created_at", order = "desc") {
+function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
     const validSortBy = ["article_id", "title", "author", "created_at", "votes", "comment_count"];
     const validOrder = ["asc", "desc"];
 
@@ -21,16 +21,30 @@ function fetchAllArticles(sort_by = "created_at", order = "desc") {
         return Promise.reject({ status: 400, msg: "Invalid order query" });
     }
 
-    return db.query(`
+     let queryStr = `
         SELECT articles.*, COUNT(comments.article_id) AS comment_count
         FROM articles
         LEFT JOIN comments ON comments.article_id = articles.article_id
+    `;
+    let queryParams = [];
+
+    if (topic) {
+        queryStr += ` WHERE topic = $1`;
+        queryParams.push(topic);
+    }
+
+    queryStr += ` 
         GROUP BY articles.article_id
         ORDER BY ${sort_by} ${order};
-        `)
+    `;
+
+   return db.query(queryStr, queryParams)
         .then(({ rows }) => {
+            if (rows.length === 0 && topic) {
+                return Promise.reject({ status: 404, msg: "Topic not found" });
+            }
             return rows;
-        })
+        });
 }
 
 function updateArticleVotes(article_id, inc_votes) {
