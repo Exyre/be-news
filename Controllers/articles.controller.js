@@ -1,5 +1,5 @@
 const db = require("../db/connection")
-const { fetchArticleById, fetchAllArticles, updateArticleVotes } = require("../Models/articles.model");
+const { fetchArticleById, fetchAllArticles, updateArticleVotes, insertArticle } = require("../Models/articles.model");
 
 function getArticlesById(req, res, next) {
     const { article_id } = req.params;
@@ -32,4 +32,16 @@ function patchArticleVotes(req, res, next) {
         .catch(next);
 }
 
-module.exports = { getArticlesById, getAllArticles, patchArticleVotes }
+function postArticle(req, res, next) {
+    const { author, title, body, topic, article_img_url } = req.body;
+
+    insertArticle(author, title, body, topic, article_img_url)
+        .then((article) => {
+            res.status(201).send({ article });
+        })
+        .catch(next);
+}
+
+
+
+module.exports = { getArticlesById, getAllArticles, patchArticleVotes, postArticle }

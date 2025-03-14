@@ -161,5 +161,38 @@
         "avatar_url": "http://example.com/avatar.jpg"
       }
     }
+  },
+  "PATCH /api/comments/:comment_id": {
+    "description": "Updates the votes of a comment based on the provided `inc_votes` value. The votes can be incremented, decremented, or left unchanged.",
+    "params": {
+      "comment_id": {
+        "type": "integer",
+        "description": "The unique identifier of the comment whose votes are being updated"
+      }
+    },
+    "requestBody": {
+      "inc_votes": {
+        "type": "integer",
+        "description": "The number of votes to increment or decrement. Positive values increase the vote count, negative values decrease it, and zero leaves the vote count unchanged.",
+        "example": 1
+      }
+    },
+    "exampleResponse": {
+      "comment": {
+        "comment_id": 1,
+        "votes": 10
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Returns the updated comment object with the new vote count."
+      },
+      "400": {
+        "description": "Bad request, possibly due to invalid `inc_votes` value."
+      },
+      "404": {
+        "description": "Comment not found for the provided `comment_id`."
+      }
+    }
   }
 }
