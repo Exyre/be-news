@@ -81,4 +81,45 @@ function updateArticleVotes(article_id, inc_votes) {
     });
 }
 
-module.exports = { fetchArticleById, fetchAllArticles, updateArticleVotes };
+function insertArticle(author, title, body, topic, article_img_url = null) {
+    if (!author || !title || !body || !topic) {
+        return Promise.reject({
+            status: 400,
+            msg: "Missing required fields (author, title, body, topic)",
+        });
+    }
+
+    const default_img_url = "http://defaultimage.com/default.jpg";
+    const imageUrl = article_img_url || default_img_url;
+
+    return db
+        .query(
+            `INSERT INTO articles (author, title, body, topic, article_img_url)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING article_id, author, title, body, topic, article_img_url, created_at, votes`,
+            [author, title, body, topic, imageUrl]
+        )
+        .then(({ rows }) => {
+            if (rows.length === 0) {
+                return Promise.reject({
+                    status: 400,
+                    msg: "Error adding article",
+                });
+            }
+
+            const article = rows[0];
+
+            
+            return db
+                .query(
+                    `SELECT COUNT(*) AS comment_count FROM comments WHERE article_id = $1`,
+                    [article.article_id]
+                )
+                .then(({ rows }) => {
+                    article.comment_count = Number(rows[0].comment_count);
+                    return article;
+                });
+        });
+}
+
+module.exports = { fetchArticleById, fetchAllArticles, updateArticleVotes, insertArticle };

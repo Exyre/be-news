@@ -584,3 +584,50 @@ describe("PATCH /api/comments/:comment_id", () => {
             });
     });
 });
+
+describe("POST /api/articles", () => {
+    test("201: Inserts a new article and responds with the inserted article", () => {
+        const newArticle = {
+            author: "butter_bridge",
+            title: "A new article",
+            body: "This is the content of the article.",
+            topic: "mitch",
+            article_img_url: "http://example.com/image.jpg"
+        };
+
+        return request(app)
+            .post("/api/articles")
+            .send(newArticle)
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.article).toEqual(
+                    expect.objectContaining({
+                        article_id: expect.any(Number),
+                        author: "butter_bridge",
+                        title: "A new article",
+                        body: "This is the content of the article.",
+                        topic: "mitch",
+                        article_img_url: "http://example.com/image.jpg",
+                        created_at: expect.any(String),
+                        votes: 0,
+                        comment_count: 0
+                    })
+                );
+            });
+    });
+
+    test("400: Responds with 'Missing required fields' when fields are missing", () => {
+        const incompleteArticle = {
+            author: "butter_bridge",
+            title: "Missing body and topic"
+        };
+
+        return request(app)
+            .post("/api/articles")
+            .send(incompleteArticle)
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Missing required fields (author, title, body, topic)");
+            });
+    });
+});
