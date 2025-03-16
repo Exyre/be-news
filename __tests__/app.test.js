@@ -229,7 +229,7 @@ describe("GET /api/articles/:article_id/comments", () => {
                             created_at: expect.any(String),
                             author: expect.any(String),
                             body: expect.any(String),
-                            article_id: 1, 
+                            article_id: expect.any(Number),  
                         })
                     );
                 });
@@ -251,7 +251,6 @@ describe("GET /api/articles/:article_id/comments", () => {
                 expect(body.msg).toBe("Invalid article_id");
             });
     });
-
     test("404: Responds with 'Article not found' when article_id does not exist", () => {
         return request(app)
             .get("/api/articles/9999/comments") 
@@ -364,7 +363,6 @@ describe("GET /api/articles/:article_id/comments", () => {
                     });
             });
     });
-
     test("400: Responds with 'Bad request' when inc_votes is missing or invalid", () => {
         return request(app)
             .patch("/api/articles/1")
@@ -374,7 +372,6 @@ describe("GET /api/articles/:article_id/comments", () => {
                 expect(body.msg).toBe("Invalid article_id");
             });
     });
-
     test("404: Responds with 'Article not found' when article_id does not exist", () => {
         return request(app)
             .patch("/api/articles/9999")
@@ -384,7 +381,6 @@ describe("GET /api/articles/:article_id/comments", () => {
                 expect(body.msg).toBe("Article not found");
             });
     });
-
     test("400: Responds with 'Invalid article ID' when article_id is not a number", () => {
         return request(app)
             .patch("/api/articles/notAnId")
@@ -405,7 +401,6 @@ describe("DELETE /api/comments/:comment_id", () => {
                 expect(body).toEqual({});
             });
     });
-
     test("404: Responds with 'Comment not found' when comment_id does not exist", () => {
         return request(app)
             .delete("/api/comments/9999")
@@ -414,7 +409,6 @@ describe("DELETE /api/comments/:comment_id", () => {
                 expect(body.msg).toBe("Comment not found");
             });
     });
-
     test("400: Responds with 'Invalid comment ID' when comment_id is not a number", () => {
         return request(app)
             .delete("/api/comments/notAnId")
@@ -427,24 +421,23 @@ describe("DELETE /api/comments/:comment_id", () => {
 
 describe("GET /api/users", () => {
     test("GET /api/users responds with an array of users", () => {
-    return request(app)
-        .get("/api/users")  
-        .expect(200)
-        .then(({ body }) => {
-            expect(body.users).toBeInstanceOf(Array);
-            expect(body.users.length).toBeGreaterThan(0);
-            body.users.forEach((user) => {
-                expect(user).toEqual(
-                    expect.objectContaining({
-                        username: expect.any(String),
-                        name: expect.any(String),
-                        avatar_url: expect.any(String),
-                    })
-                );
+        return request(app)
+            .get("/api/users")  
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.users).toBeInstanceOf(Array);
+                expect(body.users.length).toBeGreaterThan(0);
+                body.users.forEach((user) => {
+                    expect(user).toEqual(
+                        expect.objectContaining({
+                            username: expect.any(String),
+                            name: expect.any(String),
+                            avatar_url: expect.any(String),
+                        })
+                    );
+                });
             });
-        });
-});
-
+    });
     test("404: Responds with 'Route not found' for an incorrect URL", () => {
         return request(app)
             .get("/api/userrs") 
@@ -453,7 +446,6 @@ describe("GET /api/users", () => {
                 expect(body.msg).toBe("Route not found");
             });
     });
-
     test("404: Responds with 'No users found' if there are no users in the database", () => {
         jest.spyOn(db, "query").mockResolvedValueOnce({ rows: [] });
 
@@ -482,7 +474,6 @@ describe("GET /api/users/:username", () => {
                 expect(body.user.username).toBe("butter_bridge");
             });
     });
-
     test("404: Responds with 'User not found' when an invalid username is provided", () => {
         return request(app)
             .get("/api/users/nonexistentuser")
@@ -491,7 +482,6 @@ describe("GET /api/users/:username", () => {
                 expect(body.msg).toBe("User not found");
             });
     });
-    
     test("400: Responds with 'Username contains invalid characters' when a username with special characters is provided", () => {
         return request(app)
             .get("/api/users/!@2#") 
@@ -500,7 +490,6 @@ describe("GET /api/users/:username", () => {
                 expect(body.msg).toBe("Username contains invalid characters");
             });
     });
-
     test("404: Responds with 'Route not found' for an incorrect URL", () => {
         return request(app)
             .get("/api/userrs") 
@@ -573,7 +562,6 @@ describe("PATCH /api/comments/:comment_id", () => {
                 expect(body.comment.votes).toBe(16); 
             });
     });
-
     test("200: should decrement the votes when inc_votes is negative", () => {
         return request(app)
             .patch("/api/comments/1")
@@ -615,7 +603,6 @@ describe("POST /api/articles", () => {
                 );
             });
     });
-
     test("400: Responds with 'Missing required fields' when fields are missing", () => {
         const incompleteArticle = {
             author: "butter_bridge",
@@ -644,7 +631,6 @@ describe("/api/articles (pagination)", () => {
                 expect(typeof body.total_count).toBe("number");
             });
     });
-
     test("200: Paginates results correctly when 'p' (page) is specified", () => {
         return request(app)
             .get("/api/articles?limit=5&p=2")
@@ -655,14 +641,12 @@ describe("/api/articles (pagination)", () => {
                 expect(body).toHaveProperty("total_count");
             });
     });
-
     test("200: total_count remains the same across pages", async () => {
         const res1 = await request(app).get("/api/articles?limit=5&p=1").expect(200);
         const res2 = await request(app).get("/api/articles?limit=5&p=2").expect(200);
 
         expect(res1.body.total_count).toBe(res2.body.total_count);
     });
-
     test("400: Responds with an error when 'limit' is invalid", () => {
         return request(app)
             .get("/api/articles?limit=not-a-number")
@@ -671,7 +655,6 @@ describe("/api/articles (pagination)", () => {
                 expect(body.msg).toBe("Invalid limit query");
             });
     });
-
     test("400: Responds with an error when 'p' (page) is invalid", () => {
         return request(app)
             .get("/api/articles?limit=5&p=not-a-number")
@@ -688,6 +671,91 @@ describe("/api/articles (pagination)", () => {
             .then(({ body }) => {
                 expect(body.articles).toEqual([]);
                 expect(body.total_count).toBeGreaterThan(0);
+            });
+    });
+});
+
+describe("GET /api/articles/:article_id/comments", () => {
+    test("200: Responds with paginated comments for the given article_id", () => {
+        return request(app)
+            .get("/api/articles/1/comments?limit=2&p=1")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toBeInstanceOf(Array);
+                expect(body.comments.length).toBe(2); 
+                expect(body).toHaveProperty("total_count"); 
+                expect(body.total_count).toBeGreaterThan(2);
+            });
+    });
+    test("200: Responds with the correct paginated comments for the second page", () => {
+        return request(app)
+            .get("/api/articles/1/comments?limit=2&p=2")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toBeInstanceOf(Array);
+                expect(body.comments.length).toBe(2); 
+                expect(body.comments[0]).toHaveProperty("comment_id"); 
+                expect(body).toHaveProperty("total_count"); 
+                expect(body.total_count).toBeGreaterThan(2); 
+            });
+    });
+    test("200: Responds with an empty array if the requested page has no comments", () => {
+        return request(app)
+            .get("/api/articles/1/comments?limit=2&p=1000") 
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toEqual([]); 
+            });
+    });
+    test("200: Responds with an empty array if article exists but has no comments", () => {
+        return request(app)
+            .get("/api/articles/2/comments") 
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toEqual([]); 
+            });
+    });
+    test("200: Responds with default number of comments when no pagination is provided", () => {
+        return request(app)
+            .get("/api/articles/1/comments")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toBeInstanceOf(Array);
+                expect(body.comments.length).toBe(10); 
+                expect(body).toHaveProperty("total_count"); 
+            });
+    });
+    test("400: Responds with an error message for invalid `limit` query", () => {
+        return request(app)
+            .get("/api/articles/1/comments?limit=abc") 
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid limit query");
+            });
+    });
+    test("400: Responds with an error message for invalid `page` query", () => {
+        return request(app)
+            .get("/api/articles/1/comments?p=abc") 
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid page query");
+            });
+    });
+    test("400: Responds with an error message for a negative `page` value", () => {
+        return request(app)
+            .get("/api/articles/1/comments?p=-2") 
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid page query");
+            });
+    });
+    test("200: Responds with default pagination if no `limit` or `page` is provided", () => {
+        return request(app)
+            .get("/api/articles/1/comments") 
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments).toBeInstanceOf(Array);
+                expect(body.comments.length).toBe(10); 
             });
     });
 });

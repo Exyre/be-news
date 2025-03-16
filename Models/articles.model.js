@@ -44,7 +44,7 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic, limit, 
 
     const applyPagination = () => {
         if (limit) {
-            const offset = p ? (p - 1) * limit : 0; // If p is undefined, set offset to 0
+            const offset = p ? (p - 1) * limit : 0; 
             queryStr += ` 
                 GROUP BY articles.article_id
                 ORDER BY ${sort_by} ${order}
@@ -54,7 +54,7 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic, limit, 
 
             return db.query(countQuery)
                 .then(({ rows }) => {
-                    const total_count = Number(rows[0].total_count); // Ensure total_count is a number
+                    const total_count = Number(rows[0].total_count); 
                     return db.query(queryStr, queryParams).then(({ rows }) => {
                         return { articles: rows, total_count };
                     });

@@ -1,6 +1,6 @@
 const db = require("../db/connection")
 
-function fetchCommentsByArticleId(article_id) {
+function fetchCommentsByArticleId(article_id, limit = 10, p = 1) {
     return db.query(`SELECT * FROM articles WHERE article_id = $1;`, [article_id])
         .then(({ rows }) => {
             if (rows.length === 0) {
@@ -8,10 +8,36 @@ function fetchCommentsByArticleId(article_id) {
             }
         })
         .then(() => {
-            return db.query(`SELECT * FROM comments WHERE article_id = $1;`, [article_id])
-                .then(({ rows }) => rows);
+            if (isNaN(limit) || limit <= 0) {
+                return Promise.reject({ status: 400, msg: "Invalid limit query" });
+            }
+            if (isNaN(p) || p <= 0) {
+                return Promise.reject({ status: 400, msg: "Invalid page query" });
+            }
+            
+            const offset = (p - 1) * limit;
+
+            const countQuery = `SELECT COUNT(*) AS total_count FROM comments WHERE article_id = $1;`;
+            
+            return db.query(countQuery, [article_id])
+                .then(({ rows }) => {
+                    const total_count = Number(rows[0].total_count);
+
+                    const commentsQuery = `
+                        SELECT comment_id, article_id, author, body, votes, created_at
+                        FROM comments
+                        WHERE article_id = $1
+                        ORDER BY created_at DESC
+                        LIMIT $2 OFFSET $3;
+                    `;
+                    return db.query(commentsQuery, [article_id, limit, offset])
+                        .then(({ rows }) => {
+                            return { comments: rows, total_count };
+                        });
+                });
         });
 }
+
 
 function insertCommentByArticleId(article_id, username, body) {
     return db.query(

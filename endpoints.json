@@ -69,25 +69,50 @@
     }
   },
   "GET /api/articles/:article_id/comments": {
-    "description": "serves an array of all comments for a specific article",
-    "params": {
-      "article_id": {
-        "type": "number",
-        "description": "The ID of the article to fetch comments for"
-      }
-    },
-    "exampleResponse": {
-      "comments": [
-        {
-          "comment_id": 1,
-          "author": "weegembump",
-          "body": "Great article!",
-          "votes": 0,
-          "created_at": "2018-05-30T16:59:13.341Z"
-        }
-      ]
+  "description": "serves an array of comments for a specific article with pagination",
+  "params": {
+    "article_id": {
+      "type": "number",
+      "description": "The ID of the article to fetch comments for"
     }
   },
+  "queries": [
+    {
+      "name": "limit",
+      "type": "number",
+      "description": "Limits the number of comments returned. Defaults to 10 if not provided."
+    },
+    {
+      "name": "p",
+      "type": "number",
+      "description": "Specifies the page number. Defaults to 1 if not provided."
+    }
+  ],
+  "exampleResponse": {
+    "comments": [
+      {
+        "comment_id": 1,
+        "author": "weegembump",
+        "body": "Great article!",
+        "votes": 0,
+        "created_at": "2018-05-30T16:59:13.341Z",
+        "article_id": 1
+      }
+    ],
+    "total_count": 20 // Total number of comments for this article
+  },
+  "responses": {
+    "200": {
+      "description": "Returns an array of comments for the specified article, with pagination information."
+    },
+    "400": {
+      "description": "Bad request, possibly due to invalid `page` or `limit` query."
+    },
+    "404": {
+      "description": "Article not found for the provided `article_id`."
+    }
+  }
+},
   "POST /api/articles/:article_id/comments": {
     "description": "posts a new comment to a specific article",
     "params": {
