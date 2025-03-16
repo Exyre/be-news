@@ -16,7 +16,7 @@ function fetchArticleById(article_id) {
         });
 };
 
-function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
+function fetchAllArticles(sort_by = "created_at", order = "desc", topic, limit, p) {
     const validSortBy = ["article_id", "title", "author", "created_at", "votes", "comment_count"];
     const validOrder = ["asc", "desc"];
 
@@ -26,6 +26,12 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
     if (!validOrder.includes(order)) {
         return Promise.reject({ status: 400, msg: "Invalid order query" });
     }
+    if (limit !== undefined && (isNaN(limit) || limit < 1)) {
+        return Promise.reject({ status: 400, msg: "Invalid limit query" });
+    }
+    if (p !== undefined && (isNaN(p) || p < 1)) {
+        return Promise.reject({ status: 400, msg: "Invalid page query" });
+    }
 
     let queryStr = `
         SELECT articles.*, COUNT(comments.article_id) AS comment_count
@@ -34,35 +40,51 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic) {
     `;
     let queryParams = [];
 
+    const countQuery = `SELECT COUNT(*) AS total_count FROM articles`;
+
+    const applyPagination = () => {
+        if (limit) {
+            const offset = p ? (p - 1) * limit : 0; // If p is undefined, set offset to 0
+            queryStr += ` 
+                GROUP BY articles.article_id
+                ORDER BY ${sort_by} ${order}
+                LIMIT $1 OFFSET $2;
+            `;
+            queryParams.push(limit, offset);
+
+            return db.query(countQuery)
+                .then(({ rows }) => {
+                    const total_count = Number(rows[0].total_count); // Ensure total_count is a number
+                    return db.query(queryStr, queryParams).then(({ rows }) => {
+                        return { articles: rows, total_count };
+                    });
+                });
+        } else {
+            queryStr += ` 
+                GROUP BY articles.article_id
+                ORDER BY ${sort_by} ${order};
+            `;
+            return db.query(queryStr, queryParams).then(({ rows }) => {
+                return { articles: rows, total_count: rows.length }; // Send articles and count
+            });
+        }
+    };
+
     if (topic) {
         return db.query(`SELECT * FROM topics WHERE slug = $1`, [topic])
             .then(({ rows }) => {
                 if (rows.length === 0) {
                     return Promise.reject({ status: 404, msg: "Topic not found" });
                 }
-
                 queryStr += ` WHERE topic = $1`;
                 queryParams.push(topic);
-
-                queryStr += ` 
-                    GROUP BY articles.article_id
-                    ORDER BY ${sort_by} ${order};
-                `;
-
-                return db.query(queryStr, queryParams);
-            })
-            .then(({ rows }) => {
-                return rows.length === 0 ? [] : rows; 
+                return applyPagination();
             });
     }
 
-    queryStr += ` 
-        GROUP BY articles.article_id
-        ORDER BY ${sort_by} ${order};
-    `;
-
-    return db.query(queryStr, queryParams).then(({ rows }) => rows);
+    return applyPagination();
 }
+
 
 
 

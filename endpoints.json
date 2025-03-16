@@ -10,22 +10,43 @@
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all articles",
-    "queries": ["author", "topic", "sort_by", "order"],
+    "description": "Fetches an array of all articles with optional pagination, filtering by topic, and sorting.",
+    "queries": [
+      "author", 
+      "topic", 
+      "sort_by", 
+      "order", 
+      "limit", 
+      "p"
+    ],
     "exampleResponse": {
       "articles": [
         {
+          "article_id": 1,
+          "author": "weegembump",
           "title": "Seafood substitutions are increasing",
           "topic": "cooking",
-          "author": "weegembump",
-          "body": "Text from the article..",
+          "body": "Text from the article...",
           "created_at": "2018-05-30T15:59:13.341Z",
           "votes": 0,
-          "comment_count": 6
+          "comment_count": 6,
+          "article_img_url": "https://example.com/article-image.jpg"
         }
-      ]
-    }
-  },
+      ],
+      "total_count": 100
+    },
+    "responses": {
+      "200": {
+        "description": "Returns an array of articles with optional filters and pagination, and the total count of articles."
+      },
+      "400": {
+        "description": "Bad request, possibly due to invalid query parameters (e.g., invalid `limit`, `p`, `sort_by`, etc.)."
+      },
+      "404": {
+        "description": "Topic not found, the provided topic does not exist."
+        }
+      }
+    },
   "GET /api/articles/:article_id": {
     "description": "serves the article object for a specific article by id",
     "params": {
@@ -194,5 +215,61 @@
         "description": "Comment not found for the provided `comment_id`."
       }
     }
+  },
+  "POST /api/articles": {
+    "description": "Adds a new article.",
+    "requestBody": {
+      "author": {
+        "type": "string",
+        "description": "The author of the article",
+        "example": "Jane Doe"
+      },
+      "title": {
+        "type": "string",
+        "description": "The title of the article",
+        "example": "The Wonders of Space"
+      },
+      "body": {
+        "type": "string",
+        "description": "The content of the article",
+        "example": "Space is vast and full of mysteries..."
+      },
+      "topic": {
+        "type": "string",
+        "description": "The topic the article belongs to",
+        "example": "Science"
+      },
+      "article_img_url": {
+        "type": "string",
+        "description": "The URL of an image related to the article. Defaults to a placeholder image if not provided.",
+        "example": "https://example.com/article-image.jpg"
+      }
+    },
+    "exampleResponse": {
+      "article": {
+        "article_id": 1,
+        "author": "Jane Doe",
+        "title": "The Wonders of Space",
+        "body": "Space is vast and full of mysteries...",
+        "topic": "Science",
+        "article_img_url": "https://example.com/article-image.jpg",
+        "votes": 0,
+        "created_at": "2025-03-16T10:00:00Z",
+        "comment_count": 0
+      }
+    },
+    "responses": {
+      "201": {
+        "description": "The article has been successfully added."
+      },
+      "400": {
+        "description": "Bad request, possibly due to missing required fields."
+      },
+      "404": {
+        "description": "Topic not found, the provided topic is invalid."
+      }
+    }
   }
 }
+  
+

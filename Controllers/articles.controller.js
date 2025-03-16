@@ -12,14 +12,15 @@ function getArticlesById(req, res, next) {
 } 
 
 function getAllArticles(req, res, next) {
-    const { sort_by, order, topic } = req.query
+    const { sort_by, order, topic, limit, p } = req.query;
 
-    fetchAllArticles(sort_by, order, topic)
-        .then((articles) => {
-            res.status(200).send({ articles });
+    fetchAllArticles(sort_by, order, topic, limit, p)
+        .then(({ articles, total_count }) => {
+            res.status(200).send({ articles, total_count: Number(total_count) });
         })
         .catch(next);
 }
+
 
 function patchArticleVotes(req, res, next) {
     const { article_id } = req.params;

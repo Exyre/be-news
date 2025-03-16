@@ -631,3 +631,63 @@ describe("POST /api/articles", () => {
             });
     });
 });
+
+describe("/api/articles (pagination)", () => {
+    test("200: Limits the number of articles returned when 'limit' is provided", () => {
+        return request(app)
+            .get("/api/articles?limit=5")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                expect(body.articles.length).toBe(5);
+                expect(body).toHaveProperty("total_count");
+                expect(typeof body.total_count).toBe("number");
+            });
+    });
+
+    test("200: Paginates results correctly when 'p' (page) is specified", () => {
+        return request(app)
+            .get("/api/articles?limit=5&p=2")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toBeInstanceOf(Array);
+                expect(body.articles.length).toBe(5);
+                expect(body).toHaveProperty("total_count");
+            });
+    });
+
+    test("200: total_count remains the same across pages", async () => {
+        const res1 = await request(app).get("/api/articles?limit=5&p=1").expect(200);
+        const res2 = await request(app).get("/api/articles?limit=5&p=2").expect(200);
+
+        expect(res1.body.total_count).toBe(res2.body.total_count);
+    });
+
+    test("400: Responds with an error when 'limit' is invalid", () => {
+        return request(app)
+            .get("/api/articles?limit=not-a-number")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid limit query");
+            });
+    });
+
+    test("400: Responds with an error when 'p' (page) is invalid", () => {
+        return request(app)
+            .get("/api/articles?limit=5&p=not-a-number")
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid page query");
+            });
+    });
+
+    test("200: Returns empty array if page is too high", () => {
+        return request(app)
+            .get("/api/articles?limit=5&p=999")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toEqual([]);
+                expect(body.total_count).toBeGreaterThan(0);
+            });
+    });
+});
