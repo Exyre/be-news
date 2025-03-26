@@ -144,4 +144,21 @@ function insertArticle(author, title, body, topic, article_img_url = null) {
         });
 }
 
-module.exports = { fetchArticleById, fetchAllArticles, updateArticleVotes, insertArticle };
+function deleteArticleById(article_id) {                 
+    if (isNaN(article_id) || article_id <= 0) {
+        return Promise.reject({ status: 400, msg: "Bad request" });
+    }
+
+    return db
+        .query("DELETE FROM comments WHERE article_id = $1;", [article_id]) 
+        .then(() => {
+            return db.query("DELETE FROM articles WHERE article_id = $1 RETURNING *;", [article_id]) 
+        })
+        .then(({ rows }) => {
+            if (rows.length === 0) {
+                return Promise.reject({ status: 404, msg: "Article not found" });
+            }
+        });
+}
+
+module.exports = { fetchArticleById, fetchAllArticles, updateArticleVotes, insertArticle, deleteArticleById };

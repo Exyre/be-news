@@ -759,3 +759,166 @@ describe("GET /api/articles/:article_id/comments", () => {
             });
     });
 });
+
+describe("POST /api/topics", () => {
+    test("201: Responds with the newly created topic", () => {
+        const newTopic = {
+            slug: "technology",
+            description: "All about the latest tech trends",
+        };
+
+        return request(app)
+            .post("/api/topics")
+            .send(newTopic)
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.topic).toEqual(
+                    expect.objectContaining({
+                        slug: "technology",
+                        description: "All about the latest tech trends",
+                    })
+                );
+            });
+    });
+
+    test("400: Responds with an error message when required fields are missing", () => {
+        const newTopic = { slug: "gaming" }; 
+
+        return request(app)
+            .post("/api/topics")
+            .send(newTopic)
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Missing required fields");
+            });
+    });
+
+    test("400: Responds with an error when topic slug already exists", () => {
+        const duplicateTopic = {
+            slug: "mitch", 
+            description: "Duplicate topic test",
+        };
+
+        return request(app)
+            .post("/api/topics")
+            .send(duplicateTopic)
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Slug already exists");
+            });
+    });
+
+    test("400: Responds with an error when invalid data type is sent", () => {
+        const invalidTopic = {
+            slug: 1234, 
+            description: ["Invalid", "array"], 
+        };
+
+        return request(app)
+            .post("/api/topics")
+            .send(invalidTopic)
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Invalid data type");
+            });
+    });
+    test("201: Trims spaces from slug and description before inserting", () => {
+        const newTopic = { slug: "   new-topic  ", description: "   This is a new topic.  " };
+        return request(app)
+            .post("/api/topics")
+            .send(newTopic)
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.topic).toEqual(
+                    expect.objectContaining({
+                        slug: "new-topic",
+                        description: "This is a new topic."
+                    })
+                );
+            });
+    });
+});
+
+describe("DELETE /api/articles/:article_id", () => {
+    test("204: Successfully deletes an article and its associated comments", () => {
+        const topicName = "Test Topic";
+        const authorName = "test_user";
+        const commentAuthors = ["commenter1", "commenter2"];
+
+        return db.query("INSERT INTO topics (slug) VALUES ($1) ON CONFLICT (slug) DO NOTHING;", [topicName])
+            .then(() => {
+                return db.query("INSERT INTO users (username) VALUES ($1) ON CONFLICT (username) DO NOTHING;", [authorName]);
+            })
+            .then(() => {
+                const userInsertQueries = commentAuthors.map(author => {
+                    return db.query("INSERT INTO users (username) VALUES ($1) ON CONFLICT (username) DO NOTHING;", [author]);
+                });
+
+                return Promise.all(userInsertQueries);
+            })
+            .then(() => {
+                const articleData = { 
+                    title: "Test Article", 
+                    body: "Test article body", 
+                    author: authorName,
+                    topic: topicName 
+                };
+
+                return db.query("INSERT INTO articles (title, body, author, topic) VALUES ($1, $2, $3, $4) RETURNING article_id;", 
+                    [articleData.title, articleData.body, articleData.author, articleData.topic]);
+            })
+            .then(({ rows }) => {
+                const article_id = rows[0].article_id;
+                const commentData = [
+                    { article_id, author: "commenter1", body: "Test comment 1" },
+                    { article_id, author: "commenter2", body: "Test comment 2" }
+                ];
+
+                const commentQueries = commentData.map(({ article_id, author, body }) => {
+                    return db.query("INSERT INTO comments (article_id, author, body) VALUES ($1, $2, $3);", [article_id, author, body]);
+                });
+
+                return Promise.all(commentQueries)
+                    .then(() => {
+                        return request(app)
+                            .delete(`/api/articles/${article_id}`)
+                            .expect(204); 
+                    })
+                    .then(() => {
+                        return db.query("SELECT * FROM articles WHERE article_id = $1;", [article_id]);
+                    })
+                    .then(({ rows }) => {
+                        expect(rows).toHaveLength(0); 
+
+                        return db.query("SELECT * FROM comments WHERE article_id = $1;", [article_id]);
+                    })
+                    .then(({ rows }) => {
+                        expect(rows).toHaveLength(0); 
+                    });
+            });
+    });
+    test("404: Responds with 'Article not found' for invalid article_id", () => {
+        return request(app)
+            .delete("/api/articles/9999") 
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Article not found");
+            });
+    });
+    test("400: Responds with 'Bad request' for invalid article_id format", () => {
+        return request(app)
+            .delete("/api/articles/invalid_id") 
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Bad request");
+            });
+    });
+    test("400: Responds with 'Bad request' for non-numeric article_id", () => {
+        return request(app)
+            .delete("/api/articles/abc") 
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe("Bad request");
+            });
+    });
+});

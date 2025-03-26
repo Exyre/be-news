@@ -1,5 +1,5 @@
 const db = require("../db/connection")
-const { fetchArticleById, fetchAllArticles, updateArticleVotes, insertArticle } = require("../Models/articles.model");
+const { fetchArticleById, fetchAllArticles, updateArticleVotes, insertArticle, deleteArticleById } = require("../Models/articles.model");
 
 function getArticlesById(req, res, next) {
     const { article_id } = req.params;
@@ -43,6 +43,14 @@ function postArticle(req, res, next) {
         .catch(next);
 }
 
+function removeArticleById(req, res, next) {
+    const { article_id } = req.params;
 
+    deleteArticleById(article_id)
+        .then(() => {
+            res.status(204).send();
+        })
+        .catch(next);
+}
 
-module.exports = { getArticlesById, getAllArticles, patchArticleVotes, postArticle }
+module.exports = { getArticlesById, getAllArticles, patchArticleVotes, postArticle, removeArticleById }

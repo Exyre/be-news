@@ -2,14 +2,18 @@ const { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById, u
 
 function getCommentsByArticleId(req, res, next) {
     const { article_id } = req.params;
-    const { limit, p } = req.query;
+    const { p = 1, limit = 10 } = req.query;
 
     fetchCommentsByArticleId(article_id, limit, p)
         .then(({ comments, total_count }) => {
-            res.status(200).send({ comments, total_count: Number(total_count) });
+            res.status(200).send({
+                comments,        
+                total_count       
+            });
         })
-        .catch(next);
-}
+        .catch(next);  
+    }
+
 
 function postCommentByArticleId(req, res, next) {
     const { article_id } = req.params;

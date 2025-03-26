@@ -99,7 +99,7 @@
         "article_id": 1
       }
     ],
-    "total_count": 20 // Total number of comments for this article
+    "total_count": 20 
   },
   "responses": {
     "200": {
@@ -294,7 +294,54 @@
         "description": "Topic not found, the provided topic is invalid."
       }
     }
+  },
+  "POST /api/topics": {
+    "description": "Adds a new topic to the database.",
+    "requestBody": {
+      "slug": {
+        "type": "string",
+        "description": "The unique identifier for the topic, typically a short string representing the topic name."
+      },
+      "description": {
+        "type": "string",
+        "description": "A description of the topic."
+      }
+    },
+    "exampleRequest": {
+      "slug": "new_topic",
+      "description": "This is a new topic related to coding tutorials."
+    },
+    "exampleResponse": {
+      "topic": {
+        "slug": "new_topic",
+        "description": "This is a new topic related to coding tutorials."
+      }
+    },
+    "responses": {
+      "201": {
+        "description": "Topic created successfully, returns the newly added topic."
+      },
+      "400": {
+        "description": "Bad request, possibly due to missing required fields ('slug' or 'description')."
+      }
+    }
+  },
+  "DELETE /api/articles/:article_id": {
+    "description": "Deletes an article by its ID and its respective comments",
+    "params": {
+      "article_id": {
+        "type": "number",
+        "description": "The ID of the article to delete"
+      }
+    },
+    "responses": {
+      "204": {
+        "description": "No content, the article and its comments have been deleted"
+      },
+      "404": {
+        "description": "Article not found"
+      }
+    }
   }
-}
-  
+}  
 
