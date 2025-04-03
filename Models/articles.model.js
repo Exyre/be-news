@@ -34,7 +34,7 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic, limit, 
     }
 
     let queryStr = `
-        SELECT articles.*, COUNT(comments.article_id) AS comment_count
+        SELECT articles.*, COUNT(comments.article_id) AS comment_count, articles.votes
         FROM articles
         LEFT JOIN comments ON comments.article_id = articles.article_id
     `;
@@ -65,7 +65,7 @@ function fetchAllArticles(sort_by = "created_at", order = "desc", topic, limit, 
                 ORDER BY ${sort_by} ${order};
             `;
             return db.query(queryStr, queryParams).then(({ rows }) => {
-                return { articles: rows, total_count: rows.length }; // Send articles and count
+                return { articles: rows, total_count: rows.length }; 
             });
         }
     };

@@ -119,8 +119,9 @@ describe("/api/articles", () => {
                         comment_count: expect.any(String),
                     })
                 );
+                expect(article.votes).not.toBeUndefined();
+                expect(Number.isInteger(article.votes)).toBe(true);
             });
-
             expect(articles).toBeSortedBy("created_at", { descending: true });
         });
     });
@@ -618,7 +619,6 @@ describe("POST /api/articles", () => {
             });
     });
 });
-
 describe("/api/articles (pagination)", () => {
     test("200: Limits the number of articles returned when 'limit' is provided", () => {
         return request(app)
@@ -674,7 +674,6 @@ describe("/api/articles (pagination)", () => {
             });
     });
 });
-
 describe("GET /api/articles/:article_id/comments", () => {
     test("200: Responds with paginated comments for the given article_id", () => {
         return request(app)
