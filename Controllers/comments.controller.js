@@ -1,4 +1,4 @@
-const { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById, updateVotesOnComment} = require("../Models/comments.model")
+const { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById, updateVotesOnComment, updateCommentBody: updateCommentBodyModel } = require("../Models/comments.model")
 
 function getCommentsByArticleId(req, res, next) {
     const { article_id } = req.params;
@@ -47,4 +47,23 @@ function updateCommentVotes(req, res, next) {
         .catch(next);
 }
 
-module.exports = { getCommentsByArticleId, postCommentByArticleId, removeCommentById, updateCommentVotes };
+function updateCommentBody(req, res, next) {
+    const { comment_id } = req.params;
+    const { body } = req.body;
+
+    if (!body && body !== "") {
+        return res.status(400).send({ msg: "Body is required" });
+    }
+
+    if (body === "") {
+        return res.status(400).send({ msg: "Body cannot be empty" });
+    }
+
+    updateCommentBodyModel(comment_id, body)
+        .then((comment) => {
+            res.status(200).send({ comment });
+        })
+        .catch(next);
+}
+
+module.exports = { getCommentsByArticleId, postCommentByArticleId, removeCommentById, updateCommentVotes, updateCommentBody };

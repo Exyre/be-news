@@ -86,4 +86,24 @@ function updateVotesOnComment(comment_id, inc_votes) {
         });
 }
 
-module.exports = { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById, updateVotesOnComment }
+function updateCommentBody(comment_id, body) {
+    if (!comment_id || isNaN(comment_id)) {
+        return Promise.reject({ status: 400, msg: "Invalid comment ID" });
+    }
+
+    return db.query(
+        `UPDATE comments
+         SET body = $1
+         WHERE comment_id = $2
+         RETURNING *`,
+        [body, comment_id]
+    )
+    .then(({ rows }) => {
+        if (rows.length === 0) {
+            return Promise.reject({ status: 404, msg: "Comment not found" });
+        }
+        return rows[0];
+    });
+}
+
+module.exports = { fetchCommentsByArticleId, insertCommentByArticleId, deleteCommentById, updateVotesOnComment, updateCommentBody }
